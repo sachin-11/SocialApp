@@ -1,25 +1,29 @@
 {
-  "name": "social-app",
+  "name": "practicalguide",
   "version": "1.0.0",
-  "description": "Social App",
-  "main": "Server.js",
+  "description": "social network for development",
+  "main": "server.js",
   "scripts": {
     "start": "node server",
-    "dev": "nodemon server"
+    "server": "nodemon server",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
-  "author": "Sachin Singh",
+  "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.2",
     "bcryptjs": "^2.4.3",
-    "config": "^3.3.0",
+    "config": "^3.3.1",
     "express": "^4.17.1",
     "express-validator": "^6.4.0",
     "gravatar": "^1.8.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.9.5",
+    "mongoose": "^5.9.7",
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "concurrently": "^5.1.0",
+    "nodemon": "^2.0.3"
   }
 }

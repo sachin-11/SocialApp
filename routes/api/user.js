@@ -3,34 +3,27 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const gravatar = require("gravatar");
 
-const { check, validationResult } = require("express-validator");
-
+//models
 const User = require("../../models/User");
 
-//@route GET api/auth
-//@desc Test route
-//@access Public
-router.get("/", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (error) {
-    console.error(error.message);
-    res.send("Server Error");
-  }
-});
+//validator
+const { check, validationResult } = require("express-validator");
 
 //@route POST api/user
-//@desc Login user
+//@desc Register user
 //@access Public
 
 router.post(
   "/",
   [
+    check("name", "Name is required").not().isEmpty(),
     check("email", "Please include a valid email").isEmail(),
-    check("password", "Password is required").exists(),
+    check(
+      "password",
+      "Please enter a password with 6 or more charectors"
+    ).isLength({ min: 6 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -38,27 +31,34 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
       //check if user exit
 
       let user = await User.findOne({ email });
-      if (!user) {
+      if (user) {
         return res
           .status(400)
-          .json({ errors: [{ msg: "Invalid credentials" }] });
+          .json({ errors: [{ msg: "User already exits " }] });
       }
+      const avatar = gravatar.url(email, {
+        s: "200",
+        r: "pg",
+        d: "mm",
+      });
 
-      //password match
+      user = new User({
+        name,
+        email,
+        avatar,
+        password,
+      });
 
-      const isMatch = await bcrypt.compare(password, user.password);
-
-      if (!isMatch) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Invalid credentials" }] });
-      }
+      //encrypt password
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+      await user.save();
       //return token
       const payload = {
         user: {
